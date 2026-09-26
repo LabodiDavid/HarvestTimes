@@ -1,21 +1,69 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net472</TargetFramework>
     <AssemblyName>HarvestTimes</AssemblyName>
-    <Version>1.0.0</Version><GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <ValheimPath Condition="'$(ValheimPath)' == ''">D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
-    <BepInExPath Condition="'$(BepInExPath)' == ''">$(ValheimPath)\BepInEx</BepInExPath>
-    <ManagedPath>$(ValheimPath)\valheim_Data\Managed</ManagedPath>
+    <RootNamespace>HarvestTimes</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <PluginVersion>1.0.0</PluginVersion>
+    <Version>$(PluginVersion)</Version>
+    <AssemblyVersion>$(PluginVersion).0</AssemblyVersion>
+    <FileVersion>$(PluginVersion).0</FileVersion>
+    <InformationalVersion>$(PluginVersion)</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Company>simplifydave</Company>
+    <Description>Plant growth and optional berry bush respawn timers for Valheim.</Description>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ValheimPath Condition="'$(ValheimPath)' == ''">D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
+    <R2ProfileName Condition="'$(R2ProfileName)' == ''">Default</R2ProfileName>
+    <R2BasePath Condition="'$(R2BasePath)' == ''">$(APPDATA)\r2modmanPlus-local\Valheim\profiles\$(R2ProfileName)</R2BasePath>
+    <BepInExPath Condition="'$(BepInExPath)' == ''">$(R2BasePath)\BepInEx</BepInExPath>
+    <PluginPath Condition="'$(PluginPath)' == ''">$(BepInExPath)\plugins\HarvestTimes</PluginPath>
+    <ManagedPath>$(ValheimPath)\valheim_Data\Managed</ManagedPath>
+    <DeployToR2Modman Condition="'$(DeployToR2Modman)' == ''">true</DeployToR2Modman>
+    <CreatePackage Condition="'$(CreatePackage)' == ''">true</CreatePackage>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Plugin.cs" /><Compile Include="Timing.cs" /><Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Plugin.cs" />
+    <Compile Include="Timing.cs" />
     <Reference Include="BepInEx"><HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="0Harmony"><HintPath>$(BepInExPath)\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="assembly_valheim"><HintPath>$(ManagedPath)\assembly_valheim.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(ManagedPath)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PluginVersion</_Parameter1>
+      <_Parameter2>$(PluginVersion)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
+  <Target Name="ValidateGameReferences" BeforeTargets="ResolveAssemblyReferences" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('$(BepInExPath)\core\BepInEx.dll')" Text="BepInEx.dll was not found. Set R2ProfileName or BepInExPath to your BepInEx 5 profile." />
+    <Error Condition="!Exists('$(BepInExPath)\core\0Harmony.dll')" Text="0Harmony.dll was not found in the selected BepInEx profile." />
+    <Error Condition="!Exists('$(ManagedPath)\assembly_valheim.dll')" Text="Valheim was not found. Set ValheimPath to your game installation." />
+  </Target>
+  <Target Name="GenerateVersionInfo" BeforeTargets="CoreCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)VersionInfo.cs" Overwrite="true" WriteOnlyWhenDifferent="true"
+      Lines="namespace HarvestTimes { internal static class VersionInfo { public const string Version = &quot;$(PluginVersion)&quot;%3B } }" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)VersionInfo.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)VersionInfo.cs" />
+    </ItemGroup>
+  </Target>
+  <Target Name="CopyToR2Modman" AfterTargets="Build" Condition="'$(DeployToR2Modman)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <MakeDir Directories="$(PluginPath)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginPath)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CreateThunderstorePackage" AfterTargets="Build" Condition="'$(CreatePackage)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <!-- Project-relative paths also support building without the solution. -->
+      <PackageRoot>$(MSBuildProjectDirectory)\dist\HarvestTimes</PackageRoot>
+      <PackagePlugins>$(PackageRoot)\plugins\HarvestTimes</PackagePlugins>
+      <PackageZip>$(MSBuildProjectDirectory)\dist\HarvestTimes-$(PluginVersion).zip</PackageZip>
+      <ManifestText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\Thunderstore\manifest.json').Replace('__VERSION__', '$(PluginVersion)'))</ManifestText>
+    </PropertyGroup>
+    <MakeDir Directories="$(PackageRoot);$(PackagePlugins)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackagePlugins)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Thunderstore\README.md;$(MSBuildProjectDirectory)\Thunderstore\CHANGELOG.md;$(MSBuildProjectDirectory)\Thunderstore\icon.png" DestinationFolder="$(PackageRoot)" />
+    <WriteLinesToFile File="$(PackageRoot)\manifest.json" Lines="$(ManifestText)" Overwrite="true" Encoding="UTF-8" />
+    <ZipDirectory SourceDirectory="$(PackageRoot)" DestinationFile="$(PackageZip)" Overwrite="true" />
+  </Target>
 </Project>
-

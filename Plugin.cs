@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace HarvestTimes
 {
-    [BepInPlugin(Id, "HarvestTimes", "1.0.0")]
+    [BepInPlugin(Id, "HarvestTimes", VersionInfo.Version)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string Id = "simplifydave.harvesttimes";

@@ -1,36 +1,63 @@
 # HarvestTimes
 
-Valheim BepInEx 5 plugin by simplifydave. Version **1.0.0**, plugin GUID **simplifydave.harvesttimes**.
+Valheim BepInEx 5 plugin by simplifydave. Version **1.0.0**, GUID **simplifydave.harvesttimes**.
 
-See [the player README](package/README.md) for features, installation, configuration, and timing limitations.
+See [the player README](Thunderstore/README.md) for features, installation, settings, and timer limitations.
 
-## Build and test
+## Visual Studio on Windows
 
-Requires Windows, a .NET SDK, the .NET Framework runtime for the test executable, Valheim, and BepInEx 5.
+1. Install Visual Studio 2022 with the **.NET desktop development** workload and **.NET Framework 4.7.2 targeting pack**.
+2. Open `HarvestTimes.sln`.
+3. Check `ValheimPath` and `R2ProfileName` in `HarvestTimes.csproj`. Defaults are `D:\SteamLibrary\steamapps\common\Valheim` and the r2modman `Default` profile.
+4. Install BepInEx 5 in that profile and close Valheim before building.
+5. Select **Release / Any CPU**, then **Build Solution**.
 
-```powershell
-./build.ps1 -ValheimPath 'D:\SteamLibrary\steamapps\common\Valheim' -Test
+Each successful build:
+
+- Produces `bin/Release/net472/HarvestTimes.dll` (or `bin/Debug/net472/` in Debug).
+- Copies the DLL into `%APPDATA%/r2modmanPlus-local/Valheim/profiles/Default/BepInEx/plugins/HarvestTimes/` using the selected profile.
+- Creates `dist/HarvestTimes-1.0.0.zip` for Thunderstore.
+
+Game and BepInEx dependency DLLs are referenced locally and are not copied into the release.
+
+## One version setting
+
+Change only `PluginVersion` in `HarvestTimes.csproj`. The BepInEx version constant (`obj/.../VersionInfo.cs`), assembly version, file version, informational version, assembly metadata, manifest version, and ZIP filename are generated from it. Keep a three-part version such as `1.0.0` and update the changelog when releasing.
+
+`Thunderstore/manifest.json` intentionally contains `__VERSION__`. Upload the generated ZIP in `dist`, not the template directory.
+
+## Local settings
+
+Create an ignored `Directory.Build.props` next to the project to override machine-specific paths without committing them:
+
+```xml
+<Project>
+  <PropertyGroup>
+    <ValheimPath>D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
+    <R2ProfileName>Default</R2ProfileName>
+    <!-- Optional: disable copying the built DLL into the profile. -->
+    <DeployToR2Modman>false</DeployToR2Modman>
+  </PropertyGroup>
+</Project>
 ```
 
-For a mod-manager profile, add `-BepInExPath 'C:\path\to\profile\BepInEx'`.
+You may also override `R2BasePath`, `BepInExPath`, and `PluginPath`. `CreatePackage=false` disables ZIP generation. Solution and direct project builds both use project-relative packaging paths.
 
-This script compiles against the installed game's own framework and BepInEx libraries without downloading packages. It produces `package/plugins/HarvestTimes/HarvestTimes.dll` and `artifacts/HarvestTimes-1.0.0.zip`. Game and BepInEx DLLs are not redistributed.
+## Command-line build and tests
 
-The included `.csproj` also supports ordinary SDK builds:
+The script uses Visual Studio's MSBuild and the same project as the IDE:
 
 ```powershell
-dotnet build HarvestTimes.csproj -c Release -p:ValheimPath='D:\SteamLibrary\steamapps\common\Valheim'
+./build.ps1 -Test
+./build.ps1 -R2ProfileName Default -NoDeploy -Test
 ```
 
-Use `build.ps1` to create the release archive. Local paths can be placed in an ignored `Directory.Build.props` file. Build outputs, local configuration, libraries, and IDE files are excluded by `.gitignore`.
+`-NoDeploy` skips copying into the game profile. The 17 timing/filter checks run against .NET Framework 4.7.2. Generated output, DLLs, archives, runtime configuration, and local IDE settings are excluded by `.gitignore`.
 
-## Release checklist
+## Release checks
 
-1. Run `./build.ps1 -Test`.
-2. Test in Valheim: healthy and unhealthy plants, each supported harvested bush, picking a bush again, countdown completion, save/reload, multiplayer client behavior, and each configuration switch.
-3. Optionally set `website_url` in `package/manifest.json` to the real GitHub repository URL, then rebuild.
-4. Upload `artifacts/HarvestTimes-1.0.0.zip` to your Thunderstore team. The plugin GUID is independent of your Thunderstore team name.
+Test healthy/unhealthy crops, each supported harvested berry bush, repeated harvesting, timer completion, save/reload, multiplayer, and configuration switches in Valheim. In-game and multiplayer validation have not yet been performed.
 
-Compilation and pure timing tests do not replace an in-game test. No in-game or multiplayer validation has been performed yet.
+Optionally set the real GitHub URL in `Thunderstore/manifest.json`, then rebuild and upload the generated ZIP to your Thunderstore team. The GUID is independent of the Thunderstore team name.
 
-Package structure follows the [Thunderstore package requirements](https://wiki.thunderstore.io/mods/creating-a-package) and [BepInEx packaging rules](https://wiki.thunderstore.io/mods/packaging-your-mods).
+Packaging follows the [Thunderstore requirements](https://wiki.thunderstore.io/mods/creating-a-package). No GitHub repository or Thunderstore release is published automatically.

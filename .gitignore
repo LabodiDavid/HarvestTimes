@@ -1,0 +1,27 @@
+# Build output and local release archives
+bin/
+obj/
+artifacts/
+*.zip
+package/plugins/
+
+# Local game paths and IDE settings
+Directory.Build.props
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Game libraries, runtime configuration and logs
+lib/
+libs/
+*.dll
+*.pdb
+*.cfg
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

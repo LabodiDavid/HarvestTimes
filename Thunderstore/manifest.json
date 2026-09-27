@@ -2,6 +2,6 @@
   "name": "HarvestTimes",
   "version_number": "__VERSION__",
   "website_url": "",
-  "description": "See remaining growth time on planted crops and saplings, with optional respawn timers for berry bushes. Lightweight, client-side, and configurable.",
-  "dependencies": ["denikson-BepInExPack_Valheim-5.4.2332"]
+  "description": "See remaining growth time on planted crops and saplings, and respawn timers for berry bushes.",
+  "dependencies": [ "denikson-BepInExPack_Valheim-5.4.2351" ]
 }

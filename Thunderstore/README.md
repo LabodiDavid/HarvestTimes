@@ -1,10 +1,9 @@
 # HarvestTimes
 
-Know when your next harvest is ready.
+A bepinex mod for Valheim 1.0 that allows you to know when your next harvest is ready.
 
-HarvestTimes adds a countdown to the normal hover text when you look at planted crops and saplings. Optionally, it also shows when harvested berry bushes will produce berries again.
-
-**By simplifydave | Version 1.0.0**
+HarvestTimes adds a countdown to the normal hover text when you look at planted crops and saplings. 
+Optionally, it also shows when harvested berry bushes will produce berries again.
 
 ## Features
 
@@ -12,15 +11,15 @@ HarvestTimes adds a countdown to the normal hover text when you look at planted 
 - Optional berry bush countdown: **Respawns in: 4h 28m 15s**.
 - Supports raspberry, blueberry, and cloudberry bushes.
 - Separate switches for plant growth and berry respawn timers.
-- English mod text and configuration descriptions.
-- Client-side display only; no server installation required.
 - Does not change growth speed, respawn behavior, or saved world data.
 
 ## Installation
 
+Client-side display only; Not needed to install on the server.
+
 Install with a Thunderstore-compatible mod manager, or install BepInEx 5 for Valheim and copy `plugins/HarvestTimes/HarvestTimes.dll` into `BepInEx/plugins/HarvestTimes/`.
 
-If you used the earlier PlantReadyTimer prototype, remove `PlantReadyTimer.dll` first to avoid duplicate timers. Its configuration does not migrate to HarvestTimes.
+If you used the earlier PlantReadyTimer, remove `PlantReadyTimer.dll` first to avoid duplicate timers. Its configuration does not migrate to HarvestTimes.
 
 ## Configuration
 
@@ -46,9 +45,3 @@ The mod reads each plant's own growth duration and planting time. Bush timers us
 Times are shown in ordinary hours, minutes, and seconds at normal world speed. The countdown follows Valheim's world clock: sleeping, pausing, offline worlds, and time-changing mods can affect it. It is not an independent real-world stopwatch.
 
 If a plant is unhealthy, the mod displays **Cannot mature under current conditions.** alongside the game's original status. At the end of a countdown, **Ready soon…** or **Respawning soon…** means the timer has elapsed but the game still needs to process growth or respawning. Berry checks can take roughly another minute in a loaded area; unloaded areas or additional spawn conditions can delay them further.
-
-## Compatibility and scope
-
-Requires BepInEx 5. Timers apply to standard `Plant` crops/saplings and respawning `Pickable` objects that drop Raspberry, Blueberries, or Cloudberry. Other resources, custom berry types, and custom growth systems are not covered.
-
-The mod's added text is English. Existing game text follows your selected game language. Other mods that add timers may produce duplicate information. Compatibility with mods that replace growth, respawn, or hover behavior is not guaranteed.

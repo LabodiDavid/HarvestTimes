@@ -1,63 +1,47 @@
 # HarvestTimes
 
-Valheim BepInEx 5 plugin by simplifydave. Version **1.0.0**, GUID **simplifydave.harvesttimes**.
+A bepinex mod for Valheim that allows you to know when your next harvest is ready.
 
-See [the player README](Thunderstore/README.md) for features, installation, settings, and timer limitations.
+HarvestTimes adds a countdown to the normal hover text when you look at planted crops and saplings. 
+Optionally, it also shows when harvested berry bushes will produce berries again.
 
-## Visual Studio on Windows
+## Features
 
-1. Install Visual Studio 2022 with the **.NET desktop development** workload and **.NET Framework 4.7.2 targeting pack**.
-2. Open `HarvestTimes.sln`.
-3. Check `ValheimPath` and `R2ProfileName` in `HarvestTimes.csproj`. Defaults are `D:\SteamLibrary\steamapps\common\Valheim` and the r2modman `Default` profile.
-4. Install BepInEx 5 in that profile and close Valheim before building.
-5. Select **Release / Any CPU**, then **Build Solution**.
+- Plant growth countdown: **Ready in: 12m 34s**.
+- Optional berry bush countdown: **Respawns in: 4h 28m 15s**.
+- Supports raspberry, blueberry, and cloudberry bushes.
+- Separate switches for plant growth and berry respawn timers.
+- Does not change growth speed, respawn behavior, or saved world data.
 
-Each successful build:
+## Installation
 
-- Produces `bin/Release/net472/HarvestTimes.dll` (or `bin/Debug/net472/` in Debug).
-- Copies the DLL into `%APPDATA%/r2modmanPlus-local/Valheim/profiles/Default/BepInEx/plugins/HarvestTimes/` using the selected profile.
-- Creates `dist/HarvestTimes-1.0.0.zip` for Thunderstore.
+Client-side display only; Not needed to install on the server.
 
-Game and BepInEx dependency DLLs are referenced locally and are not copied into the release.
+Install with a Thunderstore-compatible mod manager, or install BepInEx 5 for Valheim and copy `plugins/HarvestTimes/HarvestTimes.dll` into `BepInEx/plugins/HarvestTimes/`.
 
-## One version setting
+If you used the earlier PlantReadyTimer, remove `PlantReadyTimer.dll` first to avoid duplicate timers. Its configuration does not migrate to HarvestTimes.
 
-Change only `PluginVersion` in `HarvestTimes.csproj`. The BepInEx version constant (`obj/.../VersionInfo.cs`), assembly version, file version, informational version, assembly metadata, manifest version, and ZIP filename are generated from it. Keep a three-part version such as `1.0.0` and update the changelog when releasing.
+## Configuration
 
-`Thunderstore/manifest.json` intentionally contains `__VERSION__`. Upload the generated ZIP in `dist`, not the template directory.
+Start the game once to generate `BepInEx/config/simplifydave.harvesttimes.cfg`.
 
-## Local settings
+```ini
+[General]
+Enabled = true
 
-Create an ignored `Directory.Build.props` next to the project to override machine-specific paths without committing them:
-
-```xml
-<Project>
-  <PropertyGroup>
-    <ValheimPath>D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
-    <R2ProfileName>Default</R2ProfileName>
-    <!-- Optional: disable copying the built DLL into the profile. -->
-    <DeployToR2Modman>false</DeployToR2Modman>
-  </PropertyGroup>
-</Project>
+[Timers]
+ShowPlantGrowth = true
+ShowBushRespawn = false
 ```
 
-You may also override `R2BasePath`, `BepInExPath`, and `PluginPath`. `CreatePackage=false` disables ZIP generation. Solution and direct project builds both use project-relative packaging paths.
+Set **ShowBushRespawn = true** to enable berry bush respawn timers. Restart the game after editing the configuration file. Configuration is local to each player.
 
-## Command-line build and tests
+Look at a plant or a harvested bush within the game's normal hover distance. Unharvested bushes keep their normal interaction text.
 
-The script uses Visual Studio's MSBuild and the same project as the IDE:
+## How time is calculated
 
-```powershell
-./build.ps1 -Test
-./build.ps1 -R2ProfileName Default -NoDeploy -Test
-```
+The mod reads each plant's own growth duration and planting time. Bush timers use the synchronized last-picked timestamp and the bush's respawn duration.
 
-`-NoDeploy` skips copying into the game profile. The 17 timing/filter checks run against .NET Framework 4.7.2. Generated output, DLLs, archives, runtime configuration, and local IDE settings are excluded by `.gitignore`.
+Times are shown in ordinary hours, minutes, and seconds at normal world speed. The countdown follows Valheim's world clock: sleeping, pausing, offline worlds, and time-changing mods can affect it. It is not an independent real-world stopwatch.
 
-## Release checks
-
-Test healthy/unhealthy crops, each supported harvested berry bush, repeated harvesting, timer completion, save/reload, multiplayer, and configuration switches in Valheim. In-game and multiplayer validation have not yet been performed.
-
-Optionally set the real GitHub URL in `Thunderstore/manifest.json`, then rebuild and upload the generated ZIP to your Thunderstore team. The GUID is independent of the Thunderstore team name.
-
-Packaging follows the [Thunderstore requirements](https://wiki.thunderstore.io/mods/creating-a-package). No GitHub repository or Thunderstore release is published automatically.
+If a plant is unhealthy, the mod displays **Cannot mature under current conditions.** alongside the game's original status. At the end of a countdown, **Ready soon…** or **Respawning soon…** means the timer has elapsed but the game still needs to process growth or respawning. Berry checks can take roughly another minute in a loaded area; unloaded areas or additional spawn conditions can delay them further.
